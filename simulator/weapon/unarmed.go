@@ -22,8 +22,8 @@ func (u Unarmed) RollDamage(dice dice.D6) (int, log.Simulation) {
 		damage += result
 	}
 
-	damage = damage / 2
-	details = append(details, log.Message("damage halved due to unarmed attack"))
+	unarmedDamage := (damage + 1) / 2
+	details = append(details, log.MessageF("damage halved from %d to %d due to unarmed attack", damage, unarmedDamage))
 
-	return damage, log.MessageF("attacking unarmed with modifier %+d, dealing %d damage", u.Modifier, damage).AndDetails(details...)
+	return unarmedDamage, log.MessageF("attacking unarmed with modifier %+d, dealing %d damage", u.Modifier, damage).AndDetails(details...)
 }
