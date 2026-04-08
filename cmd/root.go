@@ -22,6 +22,7 @@ func Execute() {
 
 func init() {
 	root.AddCommand(oneVsOne)
+	root.PersistentFlags().Int64("seed", 0, "randomness seed")
 
 	oneVsOne.Flags().Int("player-health", 15, "player health points")
 	oneVsOne.Flags().String("player-weapon-type", "unarmed", "player weapon type (unarmed, melee)")
@@ -48,6 +49,14 @@ var oneVsOne = &cobra.Command{
 	Use:   "one-vs-one",
 	Short: "Simulate a 1v1 combat situation",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		seed, err := cmd.Flags().GetInt64("seed")
+		if err != nil {
+			return err
+		}
+		if seed == 0 {
+			seed = time.Now().UnixNano()
+		}
+
 		maxSteps, err := cmd.Flags().GetInt("max-steps")
 		if err != nil {
 			return err
@@ -68,7 +77,7 @@ var oneVsOne = &cobra.Command{
 			Enemy:  enemy,
 		}
 
-		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+		rng := rand.New(rand.NewSource(seed))
 		pouch := &dice.Pouch{Random: rng}
 
 		result := simulator.Simulate(pouch, &simulator.PlayerTurn{
