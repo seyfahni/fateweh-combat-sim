@@ -34,11 +34,6 @@ type Weapon interface {
 	RollDamage(dice.D6) (int, log.Simulation)
 }
 
-type World struct {
-	Player Participant
-	Enemy  Participant
-}
-
 func Simulate(rng dice.D6, state SimulationStep, maxSteps int) log.Simulation {
 	history := make(log.Group, 0, 16)
 	for steps := 0; state != nil && steps < maxSteps; steps++ {
@@ -58,42 +53,24 @@ type SimulationStep interface {
 	Next(rng dice.D6) (SimulationStep, log.Simulation)
 }
 
-type PlayerTurn struct {
-	World
+type Turn struct {
+	Self   Participant
+	Target Participant
 }
 
-func (t *PlayerTurn) Next(rng dice.D6) (SimulationStep, log.Simulation) {
-	turnLog := log.Message("player's turn")
-	details := make([]log.Simulation, 0, len(t.Player.Actions))
+func (t *Turn) Next(rng dice.D6) (SimulationStep, log.Simulation) {
+	turnLog := log.MessageF("%s's turn", t.Self.Name)
+	details := make([]log.Simulation, 0, len(t.Self.Actions))
 
-	for _, action := range t.Player.Actions {
-		details = append(details, action.Execute(rng, &t.Enemy))
-		if t.Enemy.Health <= 0 {
-			details = append(details, log.Message("killed enemy"))
+	for _, action := range t.Self.Actions {
+		details = append(details, action.Execute(rng, &t.Target))
+		if t.Target.Health <= 0 {
+			details = append(details, log.MessageF("killed %s", t.Target.Name))
 			return nil, turnLog.AndDetails(details...)
 		}
 	}
-	return &EnemyTurn{
-		World: t.World,
-	}, turnLog.AndDetails(details...)
-}
-
-type EnemyTurn struct {
-	World
-}
-
-func (t *EnemyTurn) Next(rng dice.D6) (SimulationStep, log.Simulation) {
-	turnLog := log.Message("enemy's turn")
-	details := make([]log.Simulation, 0, len(t.Player.Actions))
-
-	for _, action := range t.Enemy.Actions {
-		details = append(details, action.Execute(rng, &t.Player))
-		if t.Player.Health <= 0 {
-			details = append(details, log.Message("killed player"))
-			return nil, turnLog.AndDetails(details...)
-		}
-	}
-	return &PlayerTurn{
-		World: t.World,
+	return &Turn{
+		Self:   t.Target,
+		Target: t.Self,
 	}, turnLog.AndDetails(details...)
 }

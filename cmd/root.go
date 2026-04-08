@@ -72,16 +72,12 @@ var oneVsOne = &cobra.Command{
 			return err
 		}
 
-		world := simulator.World{
-			Player: player,
-			Enemy:  enemy,
-		}
-
 		rng := rand.New(rand.NewSource(seed))
 		pouch := &dice.Pouch{Random: rng}
 
-		result := simulator.Simulate(pouch, &simulator.PlayerTurn{
-			World: world,
+		result := simulator.Simulate(pouch, &simulator.Turn{
+			Self:   player,
+			Target: enemy,
 		}, maxSteps)
 
 		err = result.PrintTo(ConsolePrinter{})
