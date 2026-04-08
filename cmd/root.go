@@ -58,7 +58,7 @@ var oneVsOne = &cobra.Command{
 			return err
 		}
 
-		enemy, err := configureParticipant(cmd, "player")
+		enemy, err := configureParticipant(cmd, "enemy")
 		if err != nil {
 			return err
 		}
